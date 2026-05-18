@@ -1,0 +1,251 @@
+#include <LiquidCrystal.h>
+
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+// ===== BOTÕES =====
+const int botaoS = 8;
+const int botaoD = 9;
+const int botaoV = 7;
+const int botaoPause = 6;
+
+// ===== LEDS =====
+const int ledVerde = 10;
+const int ledVermelho = A1;
+
+// ===== BUZZER =====
+int buzzer = 13;
+
+// ===== CONTROLE =====
+int escolha = 1;
+bool tocando = false;
+bool pausado = false;
+
+// ===== DETECÇÃO DE CLIQUE =====
+bool botaoV_ant = HIGH;
+bool botaoS_ant = HIGH;
+bool botaoD_ant = HIGH;
+bool botaoPause_ant = HIGH;
+
+// ===== NOTAS =====
+#define NOTE_C4 262
+#define NOTE_D4 294
+#define NOTE_E4 330
+#define NOTE_F4 349
+#define NOTE_G4 392
+#define NOTE_A4 440
+#define NOTE_B4 494
+#define NOTE_E2 82
+#define NOTE_G3 196
+#define NOTE_D5 587
+
+// ===== SETUP =====
+void setup() {
+
+  pinMode(botaoS, INPUT_PULLUP);
+  pinMode(botaoD, INPUT_PULLUP);
+  pinMode(botaoV, INPUT_PULLUP);
+  pinMode(botaoPause, INPUT_PULLUP);
+
+  pinMode(buzzer, OUTPUT);
+
+  pinMode(ledVerde, OUTPUT);
+  pinMode(ledVermelho, OUTPUT);
+
+  lcd.begin(16, 2);
+  lcd.print("MP3 Arduino");
+  delay(1000);
+  lcd.clear();
+}
+
+// ===== LOOP =====
+void loop() {
+
+  // ===== MENU =====
+  if (!tocando) {
+
+    digitalWrite(ledVerde, LOW);
+    digitalWrite(ledVermelho, HIGH);
+
+    // SUBIR
+    bool s_atual = digitalRead(botaoS);
+    if (botaoS_ant == HIGH && s_atual == LOW) {
+      escolha++;
+      if (escolha > 5) escolha = 1;
+      lcd.clear();
+    }
+    botaoS_ant = s_atual;
+
+    // DESCER
+    bool d_atual = digitalRead(botaoD);
+    if (botaoD_ant == HIGH && d_atual == LOW) {
+      escolha--;
+      if (escolha < 1) escolha = 5;
+      lcd.clear();
+    }
+    botaoD_ant = d_atual;
+
+    // MENU LCD
+    lcd.setCursor(0, 0);
+    lcd.print("Escolha:");
+
+    lcd.setCursor(0, 1);
+
+    if (escolha == 1) lcd.print("Star Wars   ");
+    if (escolha == 2) lcd.print("DOOM        ");
+    if (escolha == 3) lcd.print("Silent Night");
+    if (escolha == 4) lcd.print("Luigi Theme ");
+    if (escolha == 5) lcd.print("Megalovania ");
+
+    // CONFIRMAR
+    bool v_atual = digitalRead(botaoV);
+
+    if (botaoV_ant == HIGH && v_atual == LOW) {
+      tocando = true;
+      pausado = false;
+      lcd.clear();
+
+      digitalWrite(ledVerde, HIGH);
+      digitalWrite(ledVermelho, LOW);
+    }
+
+    botaoV_ant = v_atual;
+  }
+
+  // ===== TOCAR =====
+  if (tocando) {
+
+    digitalWrite(ledVerde, HIGH);
+    digitalWrite(ledVermelho, LOW);
+
+    if (escolha == 1) tocarStarWars();
+    if (escolha == 2) tocarDoom();
+    if (escolha == 3) tocarSilent();
+    if (escolha == 4) tocarLuigi();
+    if (escolha == 5) tocarMegalovania();
+  }
+}
+
+// ===== FUNÇÃO BASE =====
+void tocarMusica(int melody[], int tamanho) {
+
+  int notes = tamanho / 2;
+
+  for (int i = 0; i < notes * 2; i += 2) {
+
+    int duracao = 1000 / melody[i + 1];
+
+    // ===== PAUSE =====
+    while (pausado) {
+
+      digitalWrite(ledVerde, LOW);
+      digitalWrite(ledVermelho, HIGH);
+
+      lcd.setCursor(0, 1);
+      lcd.print("PAUSADO      ");
+      noTone(buzzer);
+
+      bool p_atual = digitalRead(botaoPause);
+
+      if (botaoPause_ant == HIGH && p_atual == LOW) {
+        pausado = false;
+        lcd.clear();
+      }
+
+      botaoPause_ant = p_atual;
+
+      if (digitalRead(botaoV) == LOW) {
+        tocando = false;
+        pausado = false;
+        lcd.clear();
+        return;
+      }
+    }
+
+    // ATIVAR PAUSE
+    bool p_atual = digitalRead(botaoPause);
+    if (botaoPause_ant == HIGH && p_atual == LOW) {
+      pausado = true;
+    }
+    botaoPause_ant = p_atual;
+
+    // TOCAR NOTA
+    tone(buzzer, melody[i], duracao);
+    delay(duracao * 1.3);
+    noTone(buzzer);
+
+    // SAIR
+    if (digitalRead(botaoV) == LOW) {
+      tocando = false;
+      lcd.clear();
+      return;
+    }
+  }
+
+  tocando = false;
+}
+
+// ===== MÚSICAS =====
+
+// STAR WARS
+int melodyStar[] = {
+  NOTE_A4,4, NOTE_A4,4, NOTE_A4,4,
+  NOTE_F4,8, NOTE_C4,16,
+  NOTE_A4,4, NOTE_F4,8, NOTE_C4,16, NOTE_A4,2
+};
+
+void tocarStarWars() {
+  lcd.setCursor(0, 0);
+  lcd.print("Star Wars");
+  tocarMusica(melodyStar, sizeof(melodyStar) / sizeof(melodyStar[0]));
+}
+
+// DOOM
+int melodyDoom[] = {
+  NOTE_E2,8, NOTE_E2,8, NOTE_E2,8,
+  NOTE_G3,8, NOTE_E2,8
+};
+
+void tocarDoom() {
+  lcd.setCursor(0, 0);
+  lcd.print("DOOM");
+  tocarMusica(melodyDoom, sizeof(melodyDoom) / sizeof(melodyDoom[0]));
+}
+
+// SILENT NIGHT
+int melodySilent[] = {
+  NOTE_G4,4, NOTE_A4,4, NOTE_G4,4,
+  NOTE_E4,2
+};
+
+void tocarSilent() {
+  lcd.setCursor(0, 0);
+  lcd.print("Silent Night");
+  tocarMusica(melodySilent, sizeof(melodySilent) / sizeof(melodySilent[0]));
+}
+
+// LUIGI
+int melodyLuigi[] = {
+  NOTE_E4,8, NOTE_E4,8, NOTE_E4,8,
+  NOTE_C4,8, NOTE_E4,8, NOTE_G4,4,
+  NOTE_G3,4
+};
+
+void tocarLuigi() {
+  lcd.setCursor(0, 0);
+  lcd.print("Luigi Theme");
+  tocarMusica(melodyLuigi, sizeof(melodyLuigi) / sizeof(melodyLuigi[0]));
+}
+
+// MEGALOVANIA
+int melodyMegalovania[] = {
+  NOTE_D4,8, NOTE_D4,8, NOTE_D5,4,
+  NOTE_A4,4,
+  NOTE_G4,8, NOTE_F4,8,
+  NOTE_D4,8, NOTE_F4,8, NOTE_G4,4
+};
+
+void tocarMegalovania() {
+  lcd.setCursor(0, 0);
+  lcd.print("Megalovania");
+  tocarMusica(melodyMegalovania, sizeof(melodyMegalovania) / sizeof(melodyMegalovania[0]));
+}
