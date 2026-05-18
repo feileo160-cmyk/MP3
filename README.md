@@ -10,5 +10,5 @@ ao ter mais dois dias para desenvolver o projeto foi arrumando o menu agora todo
 
 botão 1 pause/stop,botão 2 confirmação,botão 3 down/descer músicas,4 up/subir músicas.
 link:
-
+https://youtu.be/yIEej3rwDBM
 
