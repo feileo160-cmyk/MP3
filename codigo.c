@@ -2,16 +2,15 @@
 
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
-// ===== BOTÕES =====
+
 const int botaoS = 8; // subir
 const int botaoD = 9; // descer
 const int botaoV = 7; // confirmar / sair
 const int botaoPause = 6; // pause
 
-// ===== BUZZER =====
+
 int buzzer = 13;
 
-// ===== CONTROLE =====
 int escolha = 1;
 bool tocando = false;
 bool pausado = false;
@@ -27,7 +26,7 @@ bool pausado = false;
 #define NOTE_E2 82
 #define NOTE_G3 196
 
-// ===== SETUP =====
+
 void setup() {
 pinMode(botaoS, INPUT_PULLUP);
 pinMode(botaoD, INPUT_PULLUP);
@@ -41,7 +40,7 @@ delay(1000);
 lcd.clear();
 }
 
-// ===== LOOP =====
+
 void loop() {
 
 if (!tocando) {
